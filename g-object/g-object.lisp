@@ -62,17 +62,18 @@
      ,@(when set
         `((defcfun ,set :void 
             (object pobject) (name cffi-keyword) (value pobject))
-          (defgeneric (setf ,name) (values ,object &rest keys))
-          (defmethod (setf ,name) (values (,object ,object) &rest keys)
-            "Usage: 
+          (defgeneric (setf ,name) (values ,object &rest keys)
+            (:method (values (,object ,object) &rest keys)
+              "Usage: 
           (setf (property object :property) value)
           (setf (property object :prop1 :prop2) (list value1 value2))"
-            (mapc (lambda (key value)
-                    (declare (type (or symbol string) key))
-                    (let ((skey (string-downcase key)))
-                      (with-g-value (:value value :g-type (,type ,object skey))
-                        (,set ,object skey *g-value*))))
-                  keys (if (listp values) values (list values))))))
+              (mapc (lambda (key value)
+                      (declare (type (or symbol string) key))
+                      (let ((skey (string-downcase key)))
+                        (with-g-value (:value value 
+                                       :g-type (,type ,object skey))
+                          (,set ,object skey *g-value*))))
+                    keys (if (listp values) values (list values))))))
 
      (defcfun ,get :void 
        (object pobject) (name cffi-keyword) (value pobject))

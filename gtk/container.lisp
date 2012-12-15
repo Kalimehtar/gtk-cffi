@@ -31,11 +31,14 @@
           `(pack ,box ,@(ensure-cons widget)))
         widgets)))
 
-(defmethod (setf kids) (kids (container container))
-  (mapc (lambda (x) (setf (kid container) x)) kids))
+(defgeneric (setf kids) (kids container)
+  (:documentations "Pack kids to container"
+  (:method (kids (container container))
+    (mapc (lambda (x) (setf (kid container) x)) kids)))
 
-(defmethod (setf kid) (kid (container container))
-  (pack container kid))
+(defgeneric (setf kid) (kid container)
+  (:method (kid (container container))
+    (pack container kid)))
 
 (defmethod initialize-instance
   :after ((container container)

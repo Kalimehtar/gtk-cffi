@@ -245,10 +245,11 @@
 (defcfun gtk-widget-get-allocation :void 
   (widget pobject) (allocation (struct allocation :out t)))
 
-(defmethod allocation ((widget widget))
-  (let ((res (make-instance 'allocation)))
-    (gtk-widget-get-allocation widget res)
-    res))
+(defgeneric allocation (widget)
+  (:method  ((widget widget))
+    (let ((res (make-instance 'allocation)))
+      (gtk-widget-get-allocation widget res)
+      res)))
 
 (setf (documentation 'clipboard 'function) 
       "SELECTION should be :PRIMARY or :CLIPOARD")
@@ -279,11 +280,10 @@
   (context :pointer) (gdk-window pobject))
 
 (defgeneric cairo-should-draw-window (window &optional context)
-  (:documentation "WINDOW may be GdkWindow or GtkWidget"))
-(defmethod cairo-should-draw-window (window 
-                                     &optional (context cl-cairo2:*context*))
-  (cl-cairo2::with-context-pointer (context cntx-pointer)
-      (gtk-cairo-should-draw-window cntx-pointer window)))
+  (:documentation "WINDOW may be GdkWindow or GtkWidget")
+  (:method (window &optional (context cl-cairo2:*context*))
+    (cl-cairo2::with-context-pointer (context cntx-pointer)
+      (gtk-cairo-should-draw-window cntx-pointer window))))
 
 (defmethod cairo-should-draw-window ((widget widget)
                                      &optional (context cl-cairo2:*context*))
@@ -306,42 +306,42 @@
 (defcfun gtk-widget-unset-state-flags :void 
   (widget pobject) (flags state-flags))
 
-(defgeneric (setf state-flags) (value widget &key type))
-(defmethod (setf state-flags) (value (widget widget) &key type)
-  "If TYPE = :SET, only set bits, :UNSET -- unset bits, 
+(defgeneric (setf state-flags) (value widget &key type)
+  (:method (value (widget widget) &key type)
+    "If TYPE = :SET, only set bits, :UNSET -- unset bits, 
 otherwise set state = VALUE"
-  (case type
-    (:set (gtk-widget-set-state-flags widget value nil))
-    (:unset (gtk-widget-unset-state-flags widget value))
-    (t (gtk-widget-set-state-flags widget value t))))
+    (case type
+      (:set (gtk-widget-set-state-flags widget value nil))
+      (:unset (gtk-widget-unset-state-flags widget value))
+      (t (gtk-widget-set-state-flags widget value t)))))
 
 (defcfun gtk-widget-get-preferred-height :void 
   (widget pobject) (minimum :pointer) (natural :pointer))
 (defcfun gtk-widget-get-preferred-height-for-width :void 
   (widget pobject) (width :int) (minimum :pointer) (natural :pointer))
 
-(defgeneric preferred-height (widget &key for-width))
-(defmethod preferred-height ((widget widget) &key for-width)
-  "Returns (values minimum natural)"
-  (with-foreign-outs ((minimum :int) (natural :int)) :ignore
-    (if for-width
-        (gtk-widget-get-preferred-height-for-width widget
-                                                   for-width minimum natural)
-        (gtk-widget-get-preferred-height widget minimum natural))))
+(defgeneric preferred-height (widget &key for-width)
+  (:method ((widget widget) &key for-width)
+    "Returns (values minimum natural)"
+    (with-foreign-outs ((minimum :int) (natural :int)) :ignore
+      (if for-width
+          (gtk-widget-get-preferred-height-for-width widget
+                                                     for-width minimum natural)
+          (gtk-widget-get-preferred-height widget minimum natural)))))
 
 (defcfun gtk-widget-get-preferred-width :void 
   (widget pobject) (minimum :pointer) (natural :pointer))
 (defcfun gtk-widget-get-preferred-width-for-height :void 
   (widget pobject) (height :int) (minimum :pointer) (natural :pointer))
 
-(defgeneric preferred-width (widget &key for-height))
-(defmethod preferred-width ((widget widget) &key for-height)
-  "Returns (values minimum natural)"
-  (with-foreign-outs ((minimum :int) (natural :int)) :ignore
-    (if for-height
-        (gtk-widget-get-preferred-width-for-height widget 
-                                                   for-height minimum natural)
-        (gtk-widget-get-preferred-width widget minimum natural))))
+(defgeneric preferred-width (widget &key for-height)
+  (:method ((widget widget) &key for-height)
+    "Returns (values minimum natural)"
+    (with-foreign-outs ((minimum :int) (natural :int)) :ignore
+      (if for-height
+          (gtk-widget-get-preferred-width-for-height widget 
+                                                     for-height minimum natural)
+          (gtk-widget-get-preferred-width widget minimum natural)))))
 
 (defcenum size-request-mode
   :height-for-width :width-for-height)

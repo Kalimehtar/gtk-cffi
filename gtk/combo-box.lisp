@@ -12,6 +12,7 @@
 
 (defmethod gconstructor ((combo-box combo-box)
                          &key model area entry &allow-other-keys)
+  (initialize combo-box '(model area entry))
   (cond 
     (model
      (if entry
@@ -26,13 +27,6 @@
          (gtk-combo-box-new-with-entry)
          (gtk-combo-box-new)))))
 
-
-;; separate declaration to avoid auto-adding to initargs
-(defcfun gtk-combo-box-set-model :void (combo-box pobject) (model pobject))
-(defgeneric (setf model) (tree-model combo-box)
-  (:method (tree-model (combo-box combo-box))
-    (gtk-combo-box-set-model combo-box tree-model) tree-model))
-
 (defslots combo-box
   wrap-width :int
   row-span-column :int
@@ -44,10 +38,10 @@
   focus-on-click :boolean
   button-sensitivity sensitivity-type
   entry-text-column :int
+  model pobject
   popup-fixed-width :boolean)
 
 (deffuns combo-box
-  (:get model pobject)
   (:get active-id :string)
   (popup-for-device :void (device pobject))
   (popup :void)

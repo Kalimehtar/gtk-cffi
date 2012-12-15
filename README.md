@@ -17,3 +17,9 @@ corresponding keyword or lisp function, including closure.
 
 Along with GtkListStore, I made LispStore. It can be filled much faster, than ListStore.
 
+Why not cl-gtk2
+===============
+- cl-gtk2 supports only GTK2, gtk-cffi supports GTK3
+- cl-gtk2 describes properties by hand, gtk-cffi uses g-object-class-find-property and caching results
+- cl-gtk2 offers c-style functions like (gtk:widget-queue-resize-no-redraw widget), in gtk-cffi this will be (gtk:queue-resize widget :no-redraw t)
+

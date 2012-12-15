@@ -600,6 +600,7 @@
    ;; tree-view slots
    #:model
    #:search-column
+   #:expander-column
    #:level-indentation
    #:selection
    #:hover-expand
@@ -612,13 +613,10 @@
    ;; tree-view methods
    #:append-column
    #:insert-column
-   #:get-selection
+   #:selection
    #:path-at-pos
-   #:with-path-at-pos
-   #:%path
    #:column
-   #:get-cursor
-   #:with-get-cursor-path
+   #:cursor
    #:remove-column
 
    #:tree-view-column
