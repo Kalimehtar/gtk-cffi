@@ -1,5 +1,0 @@
-(in-package :gtk-cffi)
-
-(defclass status-icon (g-object)
-  ())
-

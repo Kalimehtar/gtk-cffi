@@ -1,4 +1,0 @@
-(in-package :gtk-cffi)
-
-(defcenum text-direction
-  :none :ltr :rtl)

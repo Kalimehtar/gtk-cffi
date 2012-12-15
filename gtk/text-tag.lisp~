@@ -1,7 +1,0 @@
-(in-package :gtk-cffi)
-
-(defclass text-tag (g-object)
-  ())
-
-(defcenum wrap-mode
-  :none :char :word :word-char)

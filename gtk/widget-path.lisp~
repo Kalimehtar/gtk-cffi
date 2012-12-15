@@ -1,4 +1,0 @@
-(in-package :gtk-cffi)
-
-(defclass widget-path (object)
-  ())

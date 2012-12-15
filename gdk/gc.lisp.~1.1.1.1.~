@@ -1,7 +1,0 @@
-(in-package :gdk-cffi)
-
-(defclass gc (gobject)
-  ())
-
-(register-type 'gc "GdkGC")
-(register-type 'gc "GdkGCX11")

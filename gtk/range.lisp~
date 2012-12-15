@@ -1,7 +1,0 @@
-(in-package :gtk-cffi)
-
-(defclass range (widget)
-  ())
-
-(defcenum sensitivity-type
-  :auto :on :off)
