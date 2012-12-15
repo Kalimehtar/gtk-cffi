@@ -1,0 +1,98 @@
+;;;; -*- Mode: lisp; indent-tabs-mode: nil -*-
+;;;
+;;; button.lisp --- Wrapper for GtkButton
+;;;
+;;; Copyright (C) 2012, Roman Klochkov <kalimehtar@mail.ru>
+;;;
+
+(in-package :gtk-cffi)
+
+(defclass button (bin actionable activatable)
+  ())
+
+(defcfun gtk-button-new :pointer)
+(defcfun gtk-button-new-with-label :pointer (label :string))
+(defcfun gtk-button-new-with-mnemonic :pointer (label :string))
+(defcfun gtk-button-new-from-stock :pointer (label cffi-keyword))
+
+(defmethod gconstructor ((button button)
+                         &key label type &allow-other-keys)
+  "type can be :stock or :mnemonic, any other means button with label"
+  (if label
+      (let ((creator
+             (case type
+               (:stock #'gtk-button-new-from-stock)
+               (:mnemonic #'gtk-button-new-with-mnemonic)
+               (otherwise #'gtk-button-new-with-label))))
+        (funcall creator label))
+    (gtk-button-new)))
+
+(defslots button
+  relief relief-style
+  label :string
+  use-stock :boolean
+  use-underline :boolean
+  focus-on-click :boolean
+  image pobject
+  image-position position-type)
+
+(deffuns button
+  (clicked :void)
+  (:get event-window pobject))
+
+(defcfun gtk-button-set-alignment :void (button pobject) (x :float) (y :float))
+(defmethod (setf alignment) (coords (button button))
+  (gtk-button-set-alignment button
+                          (float (first coords))
+                          (float (second coords))))
+(save-setter button alignment)
+
+(defcfun gtk-button-get-alignment :void 
+  (button pobject) (x :pointer) (y :pointer))
+
+(defmethod alignment ((button button))
+  (with-foreign-outs-list ((x :float) (y :float)) :ignore
+    (gtk-button-get-alignment button x y)))
+
+(init-slots button)
+
+(defclass toggle-button (button)
+  ())
+
+(defcfun gtk-toggle-button-new :pointer)
+(defcfun gtk-toggle-button-new-with-label :pointer (label :string))
+(defcfun gtk-toggle-button-new-with-mnemonic :pointer (label :string))
+
+(defmethod gconstructor ((toggle-button toggle-button) &key label type)
+  (if label
+      (case type
+        (:mnemonic (gtk-toggle-button-new-with-mnemonic label))
+        (otherwise (gtk-toggle-button-new-with-label label)))
+    (gtk-toggle-button-new)))
+
+(defslots toggle-button
+  mode :boolean
+  active :boolean
+  inconsistent :boolean)
+
+(deffuns toggle-button
+  (toggled :void))
+
+(init-slots toggle-button)
+
+(defclass check-button (toggle-button)
+  ())
+
+(defcfun gtk-check-button-new :pointer)
+(defcfun gtk-check-button-new-with-label :pointer (label :string))
+(defcfun gtk-check-button-new-with-mnemonic :pointer (label :string))
+
+(defmethod gconstructor ((check-button check-button) &key label type)
+  (if label
+      (case type
+        (:mnemonic (gtk-check-button-new-with-mnemonic label))
+        (otherwise (gtk-check-button-new-with-label label)))
+    (gtk-check-button-new)))
+
+
+

@@ -1,0 +1,25 @@
+;;;; -*- Mode: lisp; indent-tabs-mode: nil -*-
+;;;
+;;; menu-item.lisp --- GtkMenuItem
+;;;
+;;; Copyright (C) 2007, Roman Klochkov <kalimehtar@mail.ru>
+;;;
+
+(in-package :gtk-cffi)
+
+(defclass menu-item (bin)
+  ())
+
+(defcfun gtk-menu-item-new :pointer)
+(defcfun gtk-menu-item-new-with-label :pointer (label gtk-string))
+(defcfun gtk-menu-item-new-with-mnemonic :pointer (label gtk-string))
+
+
+
+(defmethod gconstructor ((menu-item menu-item) 
+                         &key label mnemonic &allow-other-keys)
+  (if label
+      (if mnemonic
+          (gtk-menu-item-new-with-mnemonic label)
+          (gtk-menu-item-new-with-label label))
+      (gtk-menu-bar-new)))

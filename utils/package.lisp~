@@ -1,0 +1,6 @@
+(in-package #:cl-user)
+
+(defpackage #:g-object-cffi
+  (:use #:common-lisp)
+  (:export
+   #:with-hash))

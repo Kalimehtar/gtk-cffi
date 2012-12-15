@@ -1,0 +1,10 @@
+(in-package :gtk-cffi)
+
+(defclass menu-bar (menu-shell)
+  ())
+
+(defcfun "gtk_menu_bar_new" :pointer)
+
+(defmethod gconstructor ((menu-bar menu-bar) &rest rest)
+  (declare (ignore rest menu-bar))
+  (gtk-menu-bar-new))

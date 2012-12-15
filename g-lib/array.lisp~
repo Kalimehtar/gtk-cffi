@@ -1,0 +1,39 @@
+;;;; -*- Mode: lisp; indent-tabs-mode: nil -*-
+;;;
+;;; array.lisp --- CFFI wrapper for arrays
+;;;
+;;; Copyright (C) 2011, Roman Klochkov <kalimehtar@mail.ru>
+;;;
+
+(in-package :g-lib-cffi)
+
+(defvar *array-length*)
+
+(defmacro with-array (&body body)
+  `(with-foreign-object (*array-length* :uint)
+     ,@body))
+     
+
+(define-foreign-type cffi-array ()
+  ((element-type :initarg :type :accessor element-type))
+  (:actual-type :pointer))
+
+
+(define-parse-method garray (type)
+  (make-instance 'cffi-array :type type))
+
+(defmethod translate-to-foreign (value (cffi-array cffi-array))
+  value)
+
+(defcfun g-free :void (var :pointer))
+
+(defmethod translate-from-foreign (ptr (cffi-array cffi-array))
+  (assert (boundp *array-length*) nil 
+          "Array should be returned in WITH-ARRAY form")
+  (let ((array-length (mem-ref *array-length* :uint)))
+    (let ((res (make-array array-length)))
+      (iter
+        (for i from 0 below array-length)
+        (setf (aref res i) (mem-aref ptr (element-type cffi-array) i)))
+      (g-free ptr)
+      res)))

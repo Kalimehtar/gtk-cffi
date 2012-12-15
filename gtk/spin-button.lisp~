@@ -1,0 +1,9 @@
+;;;
+;;; spin-button.lisp -- GtkSpinButton
+;;;
+;;; Copyright (C) 2012, Roman Klochkov <kalimehtar@mail.ru>
+;;;
+(in-package :gtk-cffi)
+
+(defclass spin-button ()
+  ())

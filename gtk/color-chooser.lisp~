@@ -1,0 +1,18 @@
+;;;
+;;; color-chooser.lisp -- GtkColorChooser
+;;;
+;;; Copyright (C) 2012, Roman Klochkov <kalimehtar@mail.ru>
+;;;
+
+(in-package :gtk-cffi)
+
+(defclass color-chooser (object)
+  ())
+
+(defslots color-chooser
+  rgba prgba
+  use-alpha :boolean)
+
+(deffuns color-chooser
+  (add-palette :void (oriontation orientation) (colors-per-line :int)
+               (n-colors :int) (colors (cffi-array :element-type prgba))))

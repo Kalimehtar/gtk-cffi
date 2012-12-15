@@ -1,0 +1,62 @@
+(defpackage #:pango-cffi
+  (:use #:common-lisp #:cffi-object #:cffi)
+  (:export
+   #:font
+   #:alignment
+   #:ellipsize-mode
+   #:stretch
+   #:style
+   #:underline
+   #:variant
+   #:wrap-mode))
+
+(in-package #:pango-cffi)
+
+(g-object-cffi:register-package "Pango" *package*)
+
+
+(defcfun ("pango_font_description_from_string" pango-font)
+  :pointer (str gtk-string))
+
+(defcfun ("pango_font_description_to_string" str-pango-font)
+  gtk-string (font :pointer))
+
+(define-foreign-type font ()
+  ()
+  (:actual-type :pointer)
+  (:simple-parser font))
+
+(defmethod translate-to-foreign (value (type font))
+  (pango-font value))
+
+(defmethod translate-from-foreign (ptr (name font))
+  (str-pango-font ptr))
+
+(defcenum alignment
+  :left :center :right)
+
+(defcenum ellipsize-mode
+  :none :start :middle :end)
+
+(defcenum stretch
+  :ultra-condensed
+  :extra-condensed
+  :dcondensed
+  :semi-condensed
+  :normal
+  :semi-expanded
+  :expanded
+  :extra-expanded
+  :ultra-expanded)
+
+(defcenum style
+  :normal :oblique :italic)
+
+(defcenum underline
+  :none :single :double :low :error)
+
+(defcenum variant
+  :normal :small-caps)
+
+(defcenum wrap-mode
+  :word :char :word-char)

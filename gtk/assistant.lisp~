@@ -1,0 +1,18 @@
+;;;
+;;; assistant.lisp -- GtkAssistant
+;;;
+;;; Copyright (C) 2012, Roman Klochkov <kalimehtar@mail.ru>
+;;;
+(in-package :gtk-cffi)
+
+(defclass assistant (window)
+  ())
+
+(defcfun gtk-assistant-new :pointer)
+
+(defmethod gconstructor ((assistant assistant) &key &allow-other-keys)
+  (gtk-assistant-new))
+
+(defslots assistant
+  current-page :int
+  )

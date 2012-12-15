@@ -1,0 +1,11 @@
+(in-package :gtk-cffi)
+
+(defclass info-bar (box)
+  ())
+
+(defslot info-bar message-type message-type)
+
+(deffuns info-bar
+  (add-action-widget :void (child pobject) &key (response dialog-response))
+  (add-button 
+  

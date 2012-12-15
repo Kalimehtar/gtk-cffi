@@ -1,0 +1,33 @@
+(in-package :gtk-cffi)
+
+(defclass css-provider (g-object style-provider)
+  ())
+
+(defcfun gtk-css-provider-get-default :pointer)
+(defcfun gtk-css-provider-get-named :pointer (name :string) (variant :string))
+(defcfun gtk-css-provider-new :pointer)
+
+(defmethod gconstructor ((css-provide css-provider) &key name variant default)
+  (cond
+    (default (gtk-css-provider-get-default))
+    (name (gtk-css-provider-get-named name variant))
+    (t (gtk-css-provider-new))))
+
+(defcfun gtk-css-provider-load-from-data :boolean 
+  (css-provider pobject) (data :string) (length :uint) (g-error object)) 
+
+(defcfun gtk-css-provider-load-from-file :boolean
+  (css-provider pobject) (file gfile) (gerror gerror))
+
+(defcfun gtk-css-provider-load-from-path :boolean
+  (css-provider pobject) (path :string) (g-error object))
+
+(defmethod css-provider-load ((css-provide css-provider) 
+                              &key data filename gfile)
+  (with-g-error g-error
+    (unless 
+        (cond 
+          (data (gtk-css-provider-load-from-data css-provider data -1 g-error))
+          (path (gtk-css-provider-load-from-path css-provider path g-error))
+          (gfile (gtk-css-provider-load-from-file css-provider gfile g-error)))
+      (cerror "Continue" "CSS Provider load error: ~a" g-error))))

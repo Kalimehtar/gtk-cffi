@@ -1,0 +1,17 @@
+(in-package :gtk-cffi)
+
+(defclass gtk-object (g-object)
+  ())
+
+(defcfun "gtk_object_destroy" :void (object pobject))
+
+(defmethod destroy ((gtk-object gtk-object))
+  (gtk-object-destroy gtk-object))
+
+(defcstruct gtk-object
+  "GtkObject"
+  (parent-instance g-object)
+  (flags :uint32))
+
+(defmethod flags ((gtk-object gtk-object))
+  (foreign-slot-value (pointer gtk-object) 'gtk-object 'flags))

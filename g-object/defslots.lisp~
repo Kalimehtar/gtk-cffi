@@ -1,0 +1,114 @@
+;;;; -*- Mode: lisp; indent-tabs-mode: nil -*-
+;;;
+;;; defslots.lisp --- def*slot(s) macros for group binding setters and getters
+;;;
+;;; Copyright (C) 2011, Roman Klochkov <kalimehtar@mail.ru>
+;;;
+
+(in-package #:g-object-cffi)
+
+(defun defslot (prefix current-class slot-name slot-type)
+  (let ((getter (symbolicate prefix current-class '-get- slot-name))
+        (setter (symbolicate prefix current-class '-set- slot-name)))
+    `(progn
+       (eval-when (:compile-toplevel :load-toplevel :execute)
+         (push ',slot-name (get ',current-class 'slots)))
+       (defcfun ,getter ,slot-type (object pobject))
+       (defcfun ,setter :void (widget pobject) (value ,slot-type))
+       (unless (fboundp ',slot-name)
+         (defgeneric ,slot-name (,current-class)))
+       (unless (fboundp '(setf ,slot-name))
+         (defgeneric (setf ,slot-name) (value ,current-class)))
+       (defmethod ,slot-name ((object ,current-class)) (,getter object))
+       (defmethod (setf ,slot-name) (value (object ,current-class))
+         (,setter object value) value))))
+
+(defmacro defgtkslot (current-class slot-name slot-type)
+  (defslot 'gtk- current-class slot-name slot-type))
+
+(defun defslots (def-macro current-class slots)
+  `(progn
+     (eval-when (:compile-toplevel :load-toplevel :execute)
+       (setf (get ',current-class 'slots) nil))
+     ,@(iter
+        (for x on slots by #'cddr) 
+        (collect (list def-macro current-class (first x) (second x))))))
+
+(defmacro defgtkslots (current-class &rest slots)
+  (defslots 'defgtkslot current-class slots))
+
+(defmacro defgdkslot (current-class slot-name slot-type)
+  (defslot 'gdk- current-class slot-name slot-type))
+
+(defmacro defgdkslots (current-class &rest slots)
+  (defslots 'defgdkslot current-class slots))
+
+(defun def-fun (prefix name res-type class params &key get)
+  (let ((fun-name (symbolicate prefix class (if get '-get- '-) name))
+        (param-list (mapcar #'car params))) 
+  `(progn            
+     (defcfun ,fun-name ,res-type (,class pobject) ,@params)
+     (unless (fboundp ',name)
+       (defgeneric ,name (,class ,@param-list)))
+     (defmethod ,name ((,class ,class) ,@param-list)
+       (,fun-name ,class ,@param-list)))))
+
+(defun defsetter (prefix name slot-type class)
+  (let ((setter (symbolicate prefix class '-set- name)))
+    `(progn
+       (eval-when (:compile-toplevel :load-toplevel :execute)
+         (push ',name (get ',class 'slots)))
+       (defcfun ,setter :void (widget pobject) (value ,slot-type))
+       (unless (fboundp '(setf ,name))
+         (defgeneric (setf ,name) (value ,class)))
+       (defmethod (setf ,name) (value (object ,class)) 
+         (,setter object value) value))))
+
+(defmacro defgtkfun (name res-type class &rest params)
+  (def-fun 'gtk- name res-type class params))
+
+(defmacro defgdkfun (name res-type class &rest params)
+  (def-fun 'gdk- name res-type class params))
+
+(defmacro defgtkgetter (name res-type class &rest params)
+  (def-fun 'gtk- name res-type class params :get t))
+
+(defmacro defgdkgetter (name res-type class &rest params)
+  (def-fun 'gdk- name res-type class params :get t))
+
+(defmacro defgtksetter (name slot-type class)
+  (defsetter 'gtk- name slot-type class))
+
+(defmacro defgdksetter (name slot-type class)
+  (defsetter 'gdk- name slot-type class))
+
+(defmacro with-object ((name &optional for-free) init &rest body)
+  `(let ((,name ,init))
+     (unwind-protect
+         (progn
+           ,@body)
+       (free ,(or for-free name)))))
+
+(defmacro setf-init (object &rest fields)
+  "Should be used in constructors"
+  `(progn
+     ,@(mapcar (lambda (field-all)
+                 (let ((field (if (consp field-all) 
+                                  (first field-all) field-all))
+                       (field-p (if (consp field-all)
+                                    (third field-all) field-all)))
+                   `(when ,field-p
+                      (setf (,field ,object) ,field))))
+               fields)))
+
+(defmacro init-slots (class add-keys &body body)
+  "For DEFSLOTS* auto-constructor"
+  (let ((slots (mapcar (lambda (x) (list x nil (symbolicate x '-p)))
+                       (get class 'slots))))
+    `(defmethod shared-initialize :after ((,class ,class) slot-names
+                                          &key ,@slots ,@add-keys
+                                          &allow-other-keys)
+       (setf-init ,class ,@slots)
+       ,@body)))
+
+

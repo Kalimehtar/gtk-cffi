@@ -1,0 +1,43 @@
+(asdf:oos 'asdf:load-op :gtk-cffi)
+
+(defpackage #:editor
+  (:use #:common-lisp #:gtk-cffi #:g-object-cffi))
+(in-package #:editor)
+
+(gtk-init)
+(defparameter *window*
+  (gtk-model 
+    'window :signals '(:destroy :gtk-main-quit)
+    :width 400 :height 400 :title "Editor"
+    ('v-box
+     :expand nil
+     ('menu-bar)
+     :expand t
+     ('h-box
+      :expand nil
+      
+
+                                       ;    ('h-paned
+      ('scrolled-window
+       ('tree-view))
+      :expand t
+      ('v-box
+       :expand nil
+       ('label :text "12323")
+       :expand t
+       ('scrolled-window
+        ('text-view :id :text2)))
+      ('scrolled-window
+       ('text-view :id :text3)))
+     :expand nil
+     ('statusbar))))
+
+;(setf ;(text (buffer (object-by-id :text1))) "1"
+;      (text (buffer (object-by-id :text2))) "2"
+;      (text (buffer (object-by-id :text3))) "3")
+
+(show *window*)
+(gtk-main)
+      
+      
+     

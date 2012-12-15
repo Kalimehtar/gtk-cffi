@@ -1,0 +1,26 @@
+;;;
+;;; builder.lisp -- GtkBuilder
+;;;
+;;; Copyright (C) 2012, Roman Klochkov <kalimehtar@mail.ru>
+;;;
+
+(in-package :gtk-cffi)
+
+(defclass builder (g-object) ())
+
+(defcfun gtk-builder-new :pointer)
+
+(defmethod gconstructor ((builder builder) &key &allow-other-keys)
+  (gtk-builder-new))
+
+(defcfun gtk-builder-add-from-file :uint 
+  (builder pobject) (filename :string) (g-error g-error))
+
+(defcfun gtk-builder-add-from-string :uint 
+  (builder pobject) (string :string) (length gsize) (g-error g-error))
+
+
+
+
+(defmethod add-from ((builder builder) &key file string objects)
+  

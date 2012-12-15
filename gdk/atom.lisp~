@@ -1,0 +1,10 @@
+;;;; -*- Mode: lisp; indent-tabs-mode: nil -*-
+;;;
+;;; atom.lisp --- GdkAtom
+;;;
+;;; Copyright (C) 2007, Roman Klochkov <kalimehtar@mail.ru>
+;;;
+
+(defcfun gdk-atom-name :string (atom :pointer))
+(defcfun gdk-atom-intern-static-string :pointer (val gtk-dyn-string))
+

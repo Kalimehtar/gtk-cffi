@@ -1,0 +1,71 @@
+(in-package :gtk-cffi)
+
+(defclass style-context (g-object)
+  (provider))
+
+(defcfun gtk-style-context-new :pointer)
+
+(defmethod gconstructor ((style-context style-context) &key &allow-other-keys)
+  (gtk-style-context-new))
+
+(defgtkgetter direction text-direction style-context)
+(defgtkgetter junction-sides junction-sides style-context)
+(defgtkgetter screen pobject style-context)
+(defgtkgetter state state-flags style-context)
+
+(defcfun gtk-style-context-get-color :void 
+  (style-context pobject) (state state-flags) (color :pointer))
+
+(defcfun gtk-style-context-get-background-color :void 
+  (style-context pobject) (state state-flags) (color :pointer))
+
+(defcfun gtk-style-context-get-border-color :void 
+  (style-context pobject) (state state-flags) (color :pointer))
+
+(defmethod color ((style-context style-context) 
+                  &key type (state :normal))
+  (with-foreign-object (color 'prgba)
+    (funcall
+     (case type
+       (:bg #'gtk-style-context-get-background-color)
+       (:border #'gtk-style-context-get-border-color)
+       (t #'gtk-style-context-get-color)) style-context state color)
+    (convert-from-foreign color 'prgba)))
+
+(defcfun gtk-style-context-get-font pango-cffi:font
+  (style-context pobject) (state state-flags))
+
+(defmethod font ((style-context style-context) 
+                  &key (state :normal))
+  (gtk-style-context-get-font style-context state))
+
+(defgtkfun add-provider :void style-context 
+           (style-provider pobject) (priority :uint))
+
+(defmethod load-css ((style-context style-context) text)
+  (if (slot-boundp style-context 'provider)
+    (css-provider-load (slot-value style-context 'provider) :data text)
+    (progn
+      (let ((provider (make-instance 'css-provider)))
+        (setf (slot-value style-context 'provider) provider)
+        (css-provider-load provider :data text)
+        (add-provider style-context provider 600)))))
+
+(defun make-css (type state value)
+  (format nil "~a {~a: ~a}"
+          (if (eq state :normal) "*" state)
+          (case type
+            (:bg "background-color")
+            (:border "border-color")
+            (:font "font")
+            (t "color"))
+          value))
+
+(defmethod (setf color) (value (style-context style-context) 
+                         &key type (state :normal))
+  (check-type type (member :bg :border nil))
+  (load-css style-context (make-css type state value)))
+
+(defmethod (setf font) (value (style-context style-context) 
+                         &key (state :normal))
+  (load-css style-context (make-css :font state value)))

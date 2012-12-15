@@ -1,0 +1,23 @@
+(asdf:oos 'asdf:load-op :gtk-cffi)
+;(declaim (optimize speed))
+(defpackage #:test
+  (:use #:common-lisp #:gtk-cffi #:g-object-cffi))
+(in-package #:test)
+
+(gtk-init)
+(defparameter *model*
+  (make-instance 'lisp-model
+                 :implementation
+                 (make-instance 'lisp-model-array 
+                                :array #((1) (2) (3)) :columns '(:int))))
+
+(defparameter *window*
+  (gtk-model
+    'window :width 400
+            :height 400
+            :signals '(:destroy :gtk-main-quit)
+    ('tree-view :model *model* :columns '("Test"))))
+
+(show *window*)
+
+(gtk-main)
