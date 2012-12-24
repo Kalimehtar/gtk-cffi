@@ -32,7 +32,7 @@
         widgets)))
 
 (defgeneric (setf kids) (kids container)
-  (:documentations "Pack kids to container"
+  (:documentation "Pack kids to container")
   (:method (kids (container container))
     (mapc (lambda (x) (setf (kid container) x)) kids)))
 

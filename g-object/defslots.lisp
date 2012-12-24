@@ -147,18 +147,21 @@
 (defgeneric foreach (class func &optional data)
   (:documentation "For each element in CLASS execute FUNC"))
 (defmacro make-foreach (class &rest params)
-  (let ((gtk-name (symbolicate 'gtk- class '-foreach))
-        (cb-name (gensym)))
-  `(progn
-     (defcfun ,gtk-name :void
-       (,class pobject) (func pfunction) (data (pdata :free-to-foreign t)))
-     (defcallback ,cb-name :void ,params ;((tag pobject) (data pdata))
-       (funcall *callback* ,@(mapcar #'car params)))
-     (defmethod foreach ((,class ,class) func &optional data)
-       (if (functionp func)
-           (let ((*callback* func))
-             (,gtk-name ,class (callback ,cb-name) data))
-           (,gtk-name ,class func data))))))
+  "Class is a symbol: class or list: (class gtk-name)"
+  (destructuring-bind (class gtk-name) 
+      (if (listp class) class 
+          (list class (symbolicate 'gtk- class '-foreach)))
+    (let ((cb-name (gensym)))
+      `(progn
+         (defcfun ,gtk-name :void
+           (,class pobject) (func pfunction) (data (pdata :free-to-foreign t)))
+         (defcallback ,cb-name :void ,params ;((tag pobject) (data pdata))
+           (funcall *callback* ,@(mapcar #'car params)))
+         (defmethod foreach ((,class ,class) func &optional data)
+           (if (functionp func)
+               (let ((*callback* func))
+                 (,gtk-name ,class (callback ,cb-name) data))
+               (,gtk-name ,class func data)))))))
 
 (defmacro set-callback (object setter cb-standard func data destroy-notify
                         &rest add-params)

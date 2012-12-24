@@ -169,9 +169,9 @@
                       (accel-mods modifier-type))
   (list-accel-closures g-list)
   (can-activate-accel :boolean (signal-id :uint))   
-  ((widget-event . event) :boolean (event event))
-  (send-expose :int (event event))
-  (send-focus-change :boolean (event event))
+  ((widget-event . event) :boolean (event (:pointer (:union event))))
+  (send-expose :int (event (:pointer (:union event))))
+  (send-focus-change :boolean (event (:pointer (:union event))))
   (reparent :void (new-parent pobject))
   (is-focus :boolean)
   (grab-focus :void)
@@ -349,40 +349,43 @@ otherwise set state = VALUE"
 (defgtkgetter request-mode size-request-mode widget)
 
 (defcfun gtk-widget-get-preferred-size :void
-  (widget pobject) (minimum :pointer) (natural :pointer))
+  (widget pobject) 
+  (minimum (struct requisition :out t))
+  (natural (struct requisition :out t)))
 
 (defgeneric preferred-size (widget)
   (:method ((widget widget))
     "Returns (values minimum natural).
 Minimum and natural are requisition objects."
-    (with-foreign-outs ((minimum 'requisition) (natural 'requisition))
-        :ignore
-      (gtk-widget-get-preferred-size widget minimum natural))))
+    (let ((minimum (make-instance 'requisition))
+          (natural (make-instance 'requisition)))
+      (gtk-widget-get-preferred-size widget minimum natural)
+      (values minimum natural))))
 
-(defcstruct requested-size
+(defcstruct* requested-size
   "GtkRequestedSize"
   (data pobject)
   (minimum-size :int)
   (natural-size :int))
 
 (defcfun gtk-distribute-natural-allocation :int
-  (extra-space :int) (n-requested-sizes :int) (sizes :pointer))
+  (extra-space :int) (n-requested-sizes :int) 
+  (sizes (carray (struct requested-size))))
 
 (defun distribute-natural-allocation (extra-space sizes)
   "EXTRA-SPACE -- integer, extra space to redistribute among children.
 SIZES -- {(widget minimum-size natural-size)}*"
-  (let ((length (length sizes)))
-    (let ((sizes-struct (foreign-alloc 'requested-size :count length)))
-      (iter
-        (for i from 0 below length)
-        (for x in sizes)
-        (let ((el (mem-aref sizes-struct 'requested-size i)))
-          (with-foreign-slots ((data minimum-size natural-size) 
-                               el requested-size)
-            (setf data (first x)
-                  minimum-size (second x)
-                  natural-size (third x)))))
-      (gtk-distribute-natural-allocation extra-space length sizes-struct))))
+  (let ((sizes-struct
+         (mapcar (lambda (size)
+                   (destructuring-bind (widget minimum-size natural-size) size
+                     (let ((res (make-instance 'requested-size)))
+                       (setf (data res) widget
+                             (minimum-size res) minimum-size
+                             (natural-size res) natural-size)
+                       res)))
+                 sizes)))
+    (gtk-distribute-natural-allocation extra-space (length sizes) 
+                                       sizes-struct)))
 
 (template (name with-type) ((color t)
                             (font nil)

@@ -45,7 +45,10 @@
    (:file invisible :depends-on (widget))
    (:file actionable :depends-on (widget))
    (:file activatable :depends-on (widget))
-   (:file switch :depends-on (actionable activatable))))
+   (:file switch :depends-on (actionable activatable))
+   (:file drag-drop :depends-on (widget))
+   (:file selections :depends-on (drag-drop))))
+ 
 
 (defsystem gtk-cffi-misc
   :description "Interface to GTK/Glib via CFFI"

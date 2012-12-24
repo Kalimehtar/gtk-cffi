@@ -73,7 +73,7 @@
                         (with-g-value (:value value 
                                        :g-type (,type ,object skey))
                           (,set ,object skey *g-value*))))
-                    keys (if (listp values) values (list values))))))
+                    keys (if (listp values) values (list values)))))))
 
      (defcfun ,get :void 
        (object pobject) (name cffi-keyword) (value pobject))

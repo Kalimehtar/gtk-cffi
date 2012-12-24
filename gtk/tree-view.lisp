@@ -1,3 +1,11 @@
+;;; GtkTreeView
+;;;
+;;; (foreach tree-view ...) = gtk-tree-view-map-expanded-rows
+;;; (path-at-pos ... :is-blank t) = gtk-tree-view-is-blank-at-pos
+;;; (convert-bin-window-to-widget tree-view x y) -> (list wx wy) = 
+;;;              gtk-tree-view-convert-bin-window-to-widget-coords
+;;; (convert-{smth} ...) = gtk-tree-view-convert-{smth}-coords
+
 (in-package :gtk-cffi)
 
 (defclass tree-view (container)
@@ -28,7 +36,8 @@
   hover-expand :boolean
   rubber-banding :boolean
   search-column :int
-  expander-column pobject)
+  expander-column pobject
+  reorderable :boolean)
   
 
 (deffuns tree-view 
@@ -40,7 +49,18 @@
   (:get column pobject (n :int))
   (:get n-columns :int)
   (move-column-after :void (column pobject) (base-column pobject))
-  (scroll-to-point :void (x :int) (y :int)))
+  (scroll-to-point :void (x :int) (y :int))
+  (row-activated :void (path tree-path) (comumn pobject))
+  (expand-all :void)
+  (collapse-all :void)
+  (expand-to-path :void (path tree-path))
+  (expand-row :void (path tree-path) (open-all :boolean))
+  (collapse-row :void (path tree-path))
+  (row-expanded :boolean (path tree-path))
+  (:get bin-window pobject))
+  
+  
+  
 
 (defcfun gtk-tree-view-scroll-to-cell :void 
   (tree-view pobject) (path ptree-path) (column pobject) (use-align :boolean) 
@@ -134,7 +154,89 @@
   (:method (func (tree-view tree-view) &key data destroy-notify)
     (set-callback tree-view gtk-tree-view-set-column-drag-function
                   cb-column-drop-function func data destroy-notify)))
-                
+
+(make-foreach (tree-view gtk-tree-view-map-expanded-rows)
+              (path ptree-path) (data pdata))
+
+(defcfun gtk-tree-view-is-blank-at-pos :boolean
+  (tree-view pobject) (x :int) (y :int)
+  (path :pointer) (column :pointer) (cell-x :pointer) (cell-y :pointer))
+
+(defcfun gtk-tree-view-path-at-pos :boolean
+  (tree-view pobject) (x :int) (y :int)
+  (path :pointer) (column :pointer) (cell-x :pointer) (cell-y :pointer))
+
+(defgeneric path-at-pos (tree-view x y &key is-blank)
+  (:documentation "if is-blank gtk-tree-view-is-blank-at-pos called, else
+gtk-tree-view-path-at-pos")
+  (:method ((tree-view tree-view) x y &key is-blank)
+    (with-foreign-outs ((path 'tree-path) (column 'pobject) 
+                        (cell-x :int) (cell-y :int)) :return
+      (funcall (if is-blank #'gtk-tree-view-is-blank-at-pos 
+                   #'gtk-tree-view-get-path-at-pos)
+               tree-view x y path column cell-x cell-y))))
+
+(macrolet ((get-area (area-type)
+             (let ((cname (symbolicate 'gtk-tree-view-get- area-type '-area))
+                   (lname (symbolicate area-type '-area)))
+             `(progn
+                (defcfun ,cname :void
+                  (tree-view pobject) (path tree-path) (column pobject)
+                  (rect (struct rectangle :out t)))
+                (defgeneric ,lname
+                    (tree-view path column)
+                  (:method ((tree-view tree-view) path column)
+                    (let ((res (make-instance 'rectangle)))
+                      (,cname tree-view path column res)
+                      res)))))))
+  (get-area background)
+  (get-area cell))
+
+(defcfun gtk-tree-view-get-visible-rect :void
+  (tree-view pobject) (visible-rect (struct rectangle :out t)))
+
+(defgeneric visible-rect (tree-view)
+  (:method ((tree-view tree-view))
+    (let ((res (make-instance 'rectangle)))
+      (gtk-tree-view-get-visible-rect tree-view res)
+      res)))
+
+(defcfun gtk-tree-view-get-visible-range :void
+  (tree-view pobject) (start-path :pointer) (end-path :pointer))
+
+(defgeneric visible-range (tree-view)
+  (:method ((tree-view tree-view))
+    (with-foreign-outs-list ((start-path 'tree-path) (end-path 'tree-path))
+        :ignore
+      (gtk-tree-view-get-visible-range tree-view start-path end-path))))
+
+(macrolet ((def-coords (from to)
+             (flet ((name-coord (sym1 sym2)
+                      (symbolicate (aref (symbol-name sym1) 0) sym2)))
+               (let ((cfun (symbolicate 'gtk-tree-view-convert- from 
+                                        '-to- to '-coords))
+                     (lfun (symbolicate 'convert- from '-to- to))
+                     (from-x (name-coord from 'x))
+                     (from-y (name-coord from 'y))
+                     (to-x (name-coord to 'x))
+                     (to-y (name-coord to 'y)))
+                 `(progn 
+                    (defcfun ,cfun :void 
+                      (tree-view pobject) 
+                      (,from-x :int) (,from-y :int) 
+                      (,to-x :pointer) (,to-y :pointer))
+                    (defgeneric ,lfun (tree-view x y)
+                      (:method ((tree-view tree-view) x y)
+                        (with-foreign-outs-list ((,to-x :int) (,to-y :int)) 
+                            :ignore
+                            (,cfun tree-view x y ,to-x ,to-y)))))))))
+  (def-coords bin-window tree)
+  (def-coords bin-window widget)
+  (def-coords tree bin-window)
+  (def-coords tree widget)
+  (def-coords widget bin-window)
+  (def-coords widget tree))
+                 
 
 (init-slots tree-view (on-select)
   (when on-select
