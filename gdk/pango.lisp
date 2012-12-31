@@ -168,45 +168,45 @@ tab-stop = fixnum or (align . location), where location is fixnum
     :rise :shape :scale :fallback :letter-spacing :underline-color
     :strikethrough-color :absolute-size :gravity :gravity-hint))
 
-(defcstruct attribute
+(defcstruct* attribute
   (klass (:pointer attr-type))
   (start-index :uint)
   (end-index :uint))
 
-(defcstruct attr-string
+(defcstruct* attr-string
   (attr (:struct attribute))
   (value :string))
 
-(defcstruct attr-language
+(defcstruct* attr-language
   (attr (:struct attribute))
   (value language))
 
-(defcstruct color
+(defcstruct* color
   (red :uint16)
   (green :uint16)
   (blue :uint16))
 
-(defcstruct attr-color
+(defcstruct* attr-color
   (attr (:struct attribute))
   (value (:struct color)))
 
-(defcstruct attr-int
+(defcstruct* attr-int
   (attr (:struct attribute))
   (value :int))
 
-(defcstruct attr-float
+(defcstruct* attr-float
   (attr (:struct attribute))
   (value :float))
 
-(defcstruct attr-font-desc
+(defcstruct* attr-font-desc
   (attr (:struct attribute))
   (value font))
 
-(defcstruct rectangle
+(defcstruct* rectangle
   (x :int) (y :int)
   (width :int) (height :int))
 
-(defcstruct attr-shape
+(defcstruct* attr-shape
   (attr (:struct attribute))
   (ink (:struct rectangle))
   (logical (:struct rectangle))
@@ -214,13 +214,13 @@ tab-stop = fixnum or (align . location), where location is fixnum
   (copy-func :pointer)
   (destroy-func :pointer))
 
-(defcstruct attr-size
+(defcstruct* attr-size
   (attr (:struct attribute))
   (size :int)
   (absolute :uint))
 
 (defun rect->list (rect)
-  (with-foreign-slots ((x y width height) rect (:struct rectangle))
+  (with-foreign-slots ((x y width height) rect rectangle) ; :struct
     (list x y width height)))
 
 (eval-when (:compile-toplevel :load-toplevel)
@@ -244,35 +244,39 @@ tab-stop = fixnum or (align . location), where location is fixnum
   (case type
     ((:style :weight :variant :stretch :underline :gravity :gravity-hint)
      (convert-from-foreign 
-      value `(:struct ,(intern (symbol-name type) #.*package*))))
+      value `(cffi-objects::struct-type 
+              ,(intern (symbol-name type) #.*package*))))
     ((:strikethrough :fallback) (convert-from-foreign value :boolean))
     (t value)))
     
 
 (defun attr->list (attr)
-  (let* ((type (mem-ref (foreign-slot-value attr '(:struct attribute) 'klass) 
+  (let* ((type (mem-ref (foreign-slot-value 
+                         attr (cffi-objects::struct-type 'attribute) 'klass)
                         'attr-type))
          (tail-type (attr->type type)))
-    (with-foreign-slots ((start-index end-index) attr (:struct attribute))
+    (with-foreign-slots ((start-index end-index) attr attribute) ; :struct
       (list* type start-index end-index
              (ecase tail-type
                ((attr-language attr-string attr-font-desc attr-float)
-                (list (foreign-slot-value attr `(:struct ,tail-type) 'value)))
+                (list (foreign-slot-value 
+                       attr (cffi-objects::struct-type tail-type) 'value)))
                (attr-int (list (translate-to-enum
                                 type
-                                (foreign-slot-value attr `(:struct ,tail-type)
-                                                    'value))))
+                                (foreign-slot-value 
+                                 attr (cffi-objects::struct-type tail-type)
+                                 'value))))
                (attr-color (with-foreign-slots 
                                ((red green blue) 
-                                (foreign-slot-value attr
-                                                    '(:struct attr-color)
-                                                    'value)
-                                (:struct color))
+                                (foreign-slot-value 
+                                 attr (cffi-objects::struct-type 'attr-color)
+                                 'value)
+                                color) ; :struct
                              (list red green blue)))
                              
                (attr-size (list (foreign-slot-value attr tail-type 'size)))
                (attr-shape
-                (with-foreign-slots ((ink logical) attr (:struct attr-shape))
+                (with-foreign-slots ((ink logical) attr attr-shape) ; :struct
                   (list (rect->list ink) (rect->list logical)))))))))
 
 
@@ -290,15 +294,15 @@ tab-stop = fixnum or (align . location), where location is fixnum
              (:scale :double)
              (t (intern (symbol-name type) #.*package*)))))
     `(defcfun ,(symbolicate 'pango-attr- attr '-new) 
-         (:pointer (:struct ,(attr->type attr))) (value ,(in-type attr)))))
+         :pointer (value ,(in-type attr)))))
 
 (template attr (:foreground :background :strikethrough-color :underline-color)
   `(defcfun ,(symbolicate 'pango-attr- attr '-new) 
-       (:pointer (:struct attr-color)) (red :uint16) (green :uint16)
+       (struct attr-color) (red :uint16) (green :uint16)
        (blue :uint16)))
 
 (defcfun ("pango_attr_size_new_absolute" pango-attr-absolute-size-new) 
-    (:pointer (:struct attr-size)) (size :int))
+    (struct attr-size) (size :int))
 
 (define-foreign-type rect-list (freeable)
   ()
@@ -306,8 +310,8 @@ tab-stop = fixnum or (align . location), where location is fixnum
   (:actual-type :pointer))
 
 (defmethod translate-to-foreign (value (type rect-list))
-  (let ((ptr (foreign-alloc '(:pointer (:struct rectangle)))))
-    (with-foreign-slots ((x y width height) ptr (:struct rectangle))
+  (let ((ptr (foreign-alloc :pointer)))
+    (with-foreign-slots ((x y width height) ptr rectangle) ; :struct
       (destructuring-bind (new-x new-y new-width new-height) value
         (setf x new-x
               y new-y
@@ -316,7 +320,7 @@ tab-stop = fixnum or (align . location), where location is fixnum
     ptr))
 
 
-(defcfun pango-attr-shape-new (:pointer (:struct attr-shape)) 
+(defcfun pango-attr-shape-new :pointer
   (ink rect-list) (logical rect-list))
                
 (define-foreign-type attr-list (freeable)
@@ -362,9 +366,9 @@ tab-stop = fixnum or (align . location), where location is fixnum
                                                  'pango-attr- x '-new))))
                     (cdr (foreign-enum-keyword-list 'attr-type)))))
             params)))
-      (setf (foreign-slot-value ptr '(:struct attribute) 
+      (setf (foreign-slot-value ptr (cffi-objects::struct-type 'attribute)
                                 'start-index) start-index
-            (foreign-slot-value ptr '(:struct attribute) 
+            (foreign-slot-value ptr (cffi-objects::struct-type 'attribute) 
                                 'end-index) end-index)
       ptr)))
          

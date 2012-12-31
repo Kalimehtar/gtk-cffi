@@ -96,7 +96,7 @@
 
 (defcstruct tree-model-iface
     "GtkTreeModelIface"
-  (g-iface (:struct g-type-interface))
+  (g-iface g-type-interface) ; :struct
   (row-changed :pointer)
   (row-inserted :pointer)
   (has-child-toggled :pointer)
@@ -123,7 +123,8 @@
 (defmethod initialize-instance
   :after ((tree-model tree-model)
           &key &allow-other-keys)
-  (setf (tree-iter tree-model) (make-instance 'tree-iter :new-struct t)))
+  (setf (tree-iter tree-model) (make-instance 'tree-iter :new-struct t 
+                                              :free-after nil)))
 
 (defmethod free :before ((tree-model tree-model))
   (free (tree-iter tree-model)))

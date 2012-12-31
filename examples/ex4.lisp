@@ -168,7 +168,7 @@
   ;;(declare (optimize speed))
   ;;(format t
   ;;        "~A ~A ~A ~A ~A~%" column cell model iter col-num)
-  (let* ((iter (make-instance 'tree-iter :pointer iter-ptr))
+  (let* ((iter (make-instance 'tree-iter :pointer iter-ptr :free-after nil))
          ;; (row-num (cffi:mem-aref
          ;;       (gtk-cffi::gtk-tree-path-get-indices
          ;;        (gtk-cffi::gtk-tree-model-get-path

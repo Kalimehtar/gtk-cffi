@@ -37,7 +37,7 @@
 
 (defcfun g-variant-parse :pointer
   (type variant-type) (text :pointer) (limit :pointer) (end :pointer)
-  (g-error (:pointer (:struct g-error))))
+  (g-error object))
 
 (defcfun g-variant-print (:string :free-from-foreign t)
   (variant :pointer) (annotate :boolean))

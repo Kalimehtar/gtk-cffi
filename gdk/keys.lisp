@@ -50,7 +50,7 @@
   (level :int))
 
 (defgdkfuns keymap
-  (lookup-key :uint (key (:pointer (:struct keymap-key))))
+  (lookup-key :uint (key :pointer))
   (:get direction pango-cffi:direction)
   (have-bidi-layouts :boolean)
   (:get caps-lock-state :boolean)

@@ -74,6 +74,7 @@
    #:find-child-property
 
    #:g-object-class
+   #:g-object-class-struct
    #:g-param-spec
    #:g-object-newv
    #:new

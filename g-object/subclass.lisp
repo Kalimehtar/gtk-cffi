@@ -28,7 +28,8 @@
 
 (defcfun g-type-register-static g-type 
   (parent-type g-type) (type-name :string) 
-  (info (:pointer (:struct g-type-info))) (flags g-type-flags))
+  (info :pointer) ; (:struct g-type-info))) 
+  (flags g-type-flags))
 
 (defcfun g-type-register-static-simple g-type
   (parent-type g-type) (type-name :string) (class-size :uint)
@@ -43,7 +44,7 @@
 
 (defcfun g-type-add-interface-static :void
   (instance-type g-type) (interface-type g-type) 
-  (info (:pointer (:struct g-interface-info))))
+  (info :pointer)); (:struct g-interface-info))))
 
 
   

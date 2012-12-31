@@ -8,8 +8,8 @@
   (blue :int16))
 
 (defcfun gdk-color-parse :boolean (str :string) 
-         (color (:pointer (:struct color-struct))))
-(defcfun gdk-color-to-string :string (color (:pointer (:struct color-struct))))
+         (color :pointer))
+(defcfun gdk-color-to-string :string (color :pointer))
 (defcfun gdk-color-free :void (color :pointer))
 
 (define-foreign-type color-cffi (freeable)
@@ -22,7 +22,7 @@
 
 (defmethod translate-to-foreign (value (type color-cffi))
   (if (pointerp value) value
-    (let ((color-st (foreign-alloc '(:struct color-struct))))
+    (let ((color-st (foreign-alloc (cffi-objects::struct-type 'color-struct))))
       (gdk-color-parse (string value) color-st)
       color-st)))
 
@@ -44,9 +44,9 @@
   (:actual-type :pointer)
   (:simple-parser prgba))
 
-(defcfun gdk-rgba-parse :boolean (color (:pointer (:struct rgba-struct))) 
+(defcfun gdk-rgba-parse :boolean (color :pointer)
          (str :string))
-(defcfun gdk-rgba-to-string :string (color (:pointer (:struct rgba-struct))))
+(defcfun gdk-rgba-to-string :string (color :pointer))
 (defcfun gdk-rgba-free :void (color :pointer))
 
 (defmethod free-ptr ((class (eql 'rgba-cffi)) ptr)
@@ -54,7 +54,7 @@
 
 (defmethod translate-to-foreign (value (type rgba-cffi))
   (if (pointerp value) value
-    (let ((color-st (foreign-alloc '(:pointer (:struct rgba-struct)))))
+    (let ((color-st (foreign-alloc :pointer)))
       (assert (gdk-rgba-parse color-st (string value)) (value) 
               "Bad RGBA color") 
       color-st)))

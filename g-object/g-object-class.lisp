@@ -10,8 +10,8 @@
 (defclass g-object-class (object)
   ((free-after :initform nil)))
 
-(defcstruct g-object-class
-  (type-class (:struct g-type-class))
+(defcstruct* g-object-class-struct
+  (type-class g-type-class) ; :struct
   (construct-properties :pointer)
   (constructor :pointer)
   (set-property :pointer)
@@ -62,20 +62,23 @@
     :readable :writable :construct :construct-only :lax-validation
     :static-name :static-nick :static-blurb)
 
-(defcstruct g-param-spec
+(defcstruct* g-param-spec-struct
   "GParamSpec"
   (g-type-instance :pointer)
   (name :string)
   (flags g-param-flags)
-  (type :ulong)
+  (g-param-spec-type :ulong)
   (owner-type :ulong))
 
 (defmethod flags ((g-param-spec g-param-spec))
-  (foreign-slot-value (pointer g-param-spec) '(:struct g-param-spec) 'flags))
+  (flags (make-instance 'g-param-spec-struct :pointer (pointer g-param-spec))))
 
 (defmethod g-type ((g-param-spec g-param-spec) &key owner)
-  (foreign-slot-value (pointer g-param-spec) 
-                      '(:struct g-param-spec) (if owner 'owner-type 'type)))
+  (let ((struct (make-instance 'g-param-spec-struct 
+                               :pointer (pointer g-param-spec))))
+    (if owner 
+        (owner-type struct)
+        (g-param-spec-type struct))))
 
 (defun show-properties (g-object)
   (let ((gclass (make-instance 'g-object-class :object g-object)))

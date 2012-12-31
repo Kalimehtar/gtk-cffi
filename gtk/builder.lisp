@@ -14,19 +14,19 @@
   (gtk-builder-new))
 
 (defcfun gtk-builder-add-from-file :uint 
-  (builder pobject) (filename :string) (g-error (:pointer (:struct g-error))))
+  (builder pobject) (filename :string) (g-error :pointer))
 
 (defcfun gtk-builder-add-from-string :uint 
   (builder pobject) (string :string) (length gsize) 
-  (g-error (:pointer (:struct g-error))))
+  (g-error :pointer))
 
 (defcfun gtk-builder-add-objects-from-file :uint 
   (builder pobject) (filename :string) (object-ids string-list) 
-  (g-error (:pointer (:struct g-error))))
+  (g-error :pointer))
 
 (defcfun gtk-builder-add-objects-from-string :uint 
   (builder pobject) (string :string) (length gsize) (object-ids string-list) 
-  (g-error (:pointer (:struct g-error))))
+  (g-error :pointer))
 
 (defgeneric add-from (builder &key filename string objects)
   (:method 
@@ -76,11 +76,11 @@
 
 (defcfun gtk-builder-value-from-string :boolean 
   (builder pobject) (pspec pobject) (string :string) (value pobject) 
-  (g-error (:pointer (:struct g-error))))
+  (g-error :pointer))
 
 (defcfun gtk-builder-value-from-string-type :boolean 
   (builder pobject) (g-type g-type) (string :string) (value pobject) 
-  (g-error (:pointer (:struct g-error))))
+  (g-error :pointer))
 
 (defgeneric value-from-string (builder &key g-type param-spec string)
   (:method ((builder builder) &key g-type param-spec string)

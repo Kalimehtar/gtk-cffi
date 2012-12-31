@@ -20,38 +20,37 @@
 
 (defctype g-type :ulong "GType")
 
-(defcstruct g-type-interface
+(defcstruct* g-type-interface
   "GTypeInterface"
-  (g-type g-type)
+  (g-type-type g-type)
   (g-instance-type g-type))
 
-(defcstruct g-type-class
+(defcstruct* g-type-class
   "GTypeClass"
-  (g-type g-type))
+  (g-type-type g-type))
 
-(defcstruct g-type-instance
+(defcstruct* g-type-instance
   "GTypeInstance"
-  (g-class (:pointer (:struct g-type-class))))
+  (g-class (struct g-type-interface)))
 
 
 (defun g-type-from-instance (ptr)
-  (foreign-slot-value 
-   (foreign-slot-value ptr '(:struct g-type-instance) 'g-class)
-   '(:struct g-type-class) 'g-type))
+  (g-type-type (g-class (make-instance 'g-type-instance :pointer ptr 
+                                       :free-after nil))))
 
 (defcfun g-type-fundamental g-type (id g-type))
 (defcfun g-type-from-name g-type (name :string))
 (defcfun g-type-name :string (id :ulong))
 
-(defcstruct g-type-query
+(defcstruct* g-type-query
   "GTypeQuery"
-  (type g-type)
+  (g-type-type g-type)
   (name :string)
   (class-size :uint)
   (instance-size :uint))
 
 (defcfun g-type-query :void (type g-type) 
-         (query (:pointer (:struct g-type-query))))
+         (query (struct g-type-query)))
 
 (defun g-type->keyword (num)
   "Integer (GType) -> keyword from +fundamental-gtypes+"

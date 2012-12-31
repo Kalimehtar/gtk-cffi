@@ -16,7 +16,7 @@
   (:documentation "Lisp wrapper for GObject"))
 
 (defcstruct g-object
-  (g-type-instance (:pointer (:struct g-type-instance)))
+  (g-type-instance :pointer) ;; (:struct g-type-instance)))
   (ref-count :uint)
   (g-data :pointer))
 
@@ -145,8 +145,8 @@
            (collect (value
                      (make-instance
                       'g-value
-                      :pointer (mem-aref 
-                                params '(:struct g-value-struct) i))))))
+                      :pointer (mem-aref
+                                params 'g-value-struct i)))))) ; will be :struct
         (lisp-return (make-instance 'g-value :pointer return)))
     (let ((res (apply lisp-func lisp-params)))
       (when (/= (g-type lisp-return) 0)
@@ -162,8 +162,8 @@
     closure-ptr))
 
 
-(defcfun "g_signal_handler_disconnect" :void 
-  (instance (:pointer (:struct g-object))) (id :ulong))
+(defcfun g-signal-handler-disconnect :void 
+  (instance pobject) (id :ulong))
 
 (defmethod connect ((g-object g-object) c-handler 
                     &key signal data after swapped)

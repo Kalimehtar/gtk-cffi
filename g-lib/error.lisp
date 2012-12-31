@@ -20,18 +20,20 @@
 (defmethod free :before ((g-error g-error))
   (g-clear-error g-error))
 
-(defcstruct g-error
+(defcstruct* g-error-struct
   "GError struct"
   (domain g-quark)
   (errno :int)
   (message :string))
 
 (defun get-error (g-error)
-  (let ((p (mem-ref (pointer g-error) :pointer)))
-    (unless (null-pointer-p p)
-      (with-foreign-slots
-          ((domain errno message) p (:struct g-error))
-        `(:domain ,domain :errno ,errno :message ,message)))))
+  (let ((p (make-instance 'g-error-struct
+                          :pointer (mem-ref (pointer g-error) :pointer)
+                          :free-after nil)))        
+    (when p
+      (list :domain (domain p)
+            :errno (errno p)
+            :message (message p)))))
 
 ;(defmethod print-object ((g-error g-error) stream)
 ;  (let ((err (get-error g-error)))

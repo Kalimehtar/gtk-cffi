@@ -120,14 +120,13 @@
 
 (defctype region :pointer) ;; = GdkRegion*
 
-(defcstruct event-expose
-  ""
-  (type event-type)
+(defcstruct* event-expose
+  (event-expose-type event-type)
   (window window)
   (send-event :int8)
   (area (:struct rectangle))
   (region region)
-  (count :int))
+  (event-expose-count :int))
 
 (defcenum visibility-state
   :unobscured :partial :obscured)
@@ -237,7 +236,7 @@
   (send-event :int8)
   (message-tyoe gdk-atom)
   (data-format :ushort)
-  (data (:union client-data-union)))
+  (data client-data-union)) ; :union
 
 (defcstruct event-no-expose
   ""
@@ -292,26 +291,26 @@
 
 (defcunion event
   (type event-type)
-  (any (:struct event-any))
-  (expose (:struct event-expose))
-  (no-expose (:struct event-no-expose))
-  (visibility (:struct event-visibility))
-  (motion (:struct event-motion))
-  (button (:struct event-button))
-  (scroll (:struct event-scroll))
-  (key (:struct event-key))
-  (crossing (:struct event-crossing))
-  (focus-change (:struct event-focus))
-  (configure (:struct event-configure))
-  (property (:struct event-property))
-  (selection (:struct event-selection))
-  (owner-change (:struct event-owner-change))
-  (proximity (:struct event-proximity))
-  (client (:struct event-client))
-  (dnd (:struct event-dnd))
-  (window-state (:struct event-window-state))
-  (setting (:struct event-setting))
-  (grab-broken (:struct event-grab-broken)))
+  (any event-any)
+  (expose event-expose)
+  (no-expose event-no-expose)
+  (visibility event-visibility)
+  (motion event-motion)
+  (button event-button)
+  (scroll event-scroll)
+  (key event-key)
+  (crossing event-crossing)
+  (focus-change event-focus)
+  (configure event-configure)
+  (property event-property)
+  (selection event-selection)
+  (owner-change event-owner-change)
+  (proximity event-proximity)
+  (client event-client)
+  (dnd event-dnd)
+  (window-state event-window-state)
+  (setting event-setting)
+  (grab-broken event-grab-broken))
 
 (defclass event (object)
   ((event-type :accessor event-type)))
@@ -320,7 +319,7 @@
   :after ((event event)
           &key pointer &allow-other-keys)
   (setf (event-type event)
-        (case (foreign-slot-value pointer '(:union event) 'type)
+        (case (foreign-slot-value pointer 'event 'type) ; :union
           ((:nothing :delete :destroy :map :unmap) 'event-any)
           (:expose 'event-expose)
           (:motion-notify 'event-motion)
@@ -348,7 +347,8 @@
           (t 'event-any))))
 
 (defmethod get-slot ((event event) field)
-  (foreign-slot-value (pointer event) (list :struct (event-type event))
+  (foreign-slot-value (pointer event) 
+                      (cffi-objects::struct-type (event-type event))
                       (find-symbol (string field) :gdk-cffi)))
 
 (defun parse-event (ev-pointer field)

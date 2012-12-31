@@ -93,17 +93,6 @@
 (save-setter tree-view columns)
        
 
-(defcfun gtk-tree-view-get-path-at-pos :boolean (view pobject)
-  (x :int) (y :int) (path :pointer) (column :pointer)
-  (cell-x :pointer) (cell-y :pointer))
-
-(defgeneric path-at-pos (tree-view x y)
-  (:method ((tree-view tree-view) x y)
-    (with-foreign-outs-list 
-        ((path 'tree-path) (column 'pobject)
-         (cell-x :int) (cell-y :int)) :if-success
-      (gtk-tree-view-get-path-at-pos tree-view x y path column cell-x cell-y))))
-
 (defcfun gtk-tree-view-get-cursor :void (view pobject)
   (path :pointer) (column :pointer))
 
@@ -162,7 +151,7 @@
   (tree-view pobject) (x :int) (y :int)
   (path :pointer) (column :pointer) (cell-x :pointer) (cell-y :pointer))
 
-(defcfun gtk-tree-view-path-at-pos :boolean
+(defcfun gtk-tree-view-get-path-at-pos :boolean
   (tree-view pobject) (x :int) (y :int)
   (path :pointer) (column :pointer) (cell-x :pointer) (cell-y :pointer))
 
@@ -236,7 +225,10 @@ gtk-tree-view-path-at-pos")
   (def-coords tree widget)
   (def-coords widget bin-window)
   (def-coords widget tree))
-                 
+
+(defcfun gtk-tree-view-enable-model-drag-dest :void
+  (tree-view pobject) (targets (carray (struct target-entry)))
+  (n-targets :int) (action drag-action))
 
 (init-slots tree-view (on-select)
   (when on-select

@@ -169,9 +169,9 @@
                       (accel-mods modifier-type))
   (list-accel-closures g-list)
   (can-activate-accel :boolean (signal-id :uint))   
-  ((widget-event . event) :boolean (event (:pointer (:union event))))
-  (send-expose :int (event (:pointer (:union event))))
-  (send-focus-change :boolean (event (:pointer (:union event))))
+  ((widget-event . event) :boolean (event :pointer))
+  (send-expose :int (event :pointer))
+  (send-focus-change :boolean (event :pointer))
   (reparent :void (new-parent pobject))
   (is-focus :boolean)
   (grab-focus :void)
@@ -410,7 +410,7 @@ SIZES -- {(widget minimum-size natural-size)}*"
   ())
 
 (defcstruct widget-class
-  (parent-class (:struct g-object-class))
+  (parent-class g-object-class-struct) ; :struct
   (activate-signal :pointer)
   (dispatch-child-properties-changed :pointer)
   (destroy :pointer)

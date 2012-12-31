@@ -22,10 +22,10 @@
   (v-double :double)
   (v-pointer :pointer))
 
-(defcstruct g-value-struct
+(defcstruct* g-value-struct
   "GValue struct"
-  (g-type :ulong)
-  (data (:union g-value-data) :count 2))
+  (g-type-type :ulong)
+  (data g-value-data :count 2)) ;; with new CFFI -> (:union g-value-data)
 
 (defcfun "g_value_init" :pointer (g-value pobject) (type :int))
 (defcfun "g_value_set_boolean" :void (g-value pobject) (val :boolean))
@@ -50,10 +50,11 @@
 
 (defmethod gconstructor ((g-value g-value) &key
                          (value nil value-p) g-type &allow-other-keys)
-  (let ((ptr (foreign-alloc '(:struct g-value-struct))))
-    (setf (foreign-slot-value ptr '(:struct g-value-struct) 'g-type) 0)
-    (init-g-value ptr g-type value value-p)
-    ptr))
+  (let ((struct (make-instance 'g-value-struct :new-struct t
+                               :free-after nil)))
+    (setf (g-type-type struct) 0)
+    (init-g-value (pointer struct) g-type value value-p)
+    (pointer struct)))
 
 (defmethod (setf value) (val (g-value g-value))
   (g-value-set g-value val (g-type g-value)))
@@ -62,7 +63,7 @@
 
 (defmethod unset ((g-value g-value))
   ;(when (/= (g-type g-value) 0)
-    (format t "Unset value ~a~%" g-value)
+;    (format t "Unset value ~a~%" g-value)
     (g-value-unset g-value))
 
 (defun init-g-value (ptr type value value-p)
@@ -89,7 +90,7 @@
           (g-value-set ptr value %type))))))
 
 (defmethod init ((g-value g-value) &key (value nil value-p) g-type)
-  (format t "init ~a~%" g-value) 
+;  (format t "init ~a~%" g-value) 
   (init-g-value (pointer g-value) g-type value value-p))
   
   
@@ -98,7 +99,9 @@
 Depends on implementation of GLib/GObject!
 Returns integer GType."
   (if (null-pointer-p value) 0
-      (foreign-slot-value value '(:struct g-value-struct) 'g-type)))
+      (let ((struct (make-instance 'g-value-struct :pointer value 
+                                   :free-after nil)))
+        (g-type-type struct))))
 
 (defmethod g-type ((g-value g-value) &rest rest)
   (declare (ignore rest))

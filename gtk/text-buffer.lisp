@@ -445,7 +445,7 @@ OFFSET may be also :start or :end, the sama as 0 and -1")
 (defcfun gtk-text-buffer-deserialize :boolean 
   (register-buffer pobject) (content-buffer pobject) (format gatom) 
   (text-iter pobject) (data (garray :uint8)) (length :int) 
-  (err (:pointer (:struct g-error))))
+  (err :pointer))
 
 (define-condition deserialize-warning (warning) 
   ((g-error :initarg g-error))
@@ -504,7 +504,7 @@ OFFSET may be also :start or :end, the sama as 0 and -1")
      (iter (object text-buffer)) ;; object saves pointer, struct -- doesn't
      (array-data :pointer) (length :ulong)
      (create-tags :boolean) (user-data pdata) 
-     (g-error (:pointer (:struct g-error))))
+     (g-error :pointer))
   (destructuring-bind (func data data-destroy) user-data
     (declare (ignore data-destroy))
     (funcall func register-buffer content-buffer iter 
