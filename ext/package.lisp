@@ -11,7 +11,7 @@
                 #:get-iter #:get-path #:get-value #:iter-next #:iter-previous
                 #:iter-children #:iter-has-child #:iter-n-children #:get-flags
                 #:iter-nth-child #:iter-parent #:ref-node #:unref-node
-                #:tree-path #:cb-tree-path)
+                #:tree-path #:ptree-path)
   (:export
    #:lisp-model
    #:implementation

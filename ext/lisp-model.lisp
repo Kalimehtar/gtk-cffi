@@ -259,7 +259,7 @@
          :void ((class ,interface))
        ,@(loop :for (callback args) :on callbacks :by #'cddr
             :collecting `(setf (foreign-slot-value class 
-                                                   '(:struct ,interface) 
+                                                   ',interface ; :struct
                                                    ',callback)
                                (callback ,(symbolicate '#:cb- callback)))))))
 
@@ -269,8 +269,8 @@
  get-n-columns (:int)
  get-column-type (:int (index :int))
  get-iter (:boolean (iter (object tree-iter))
-                    (path cb-tree-path))
- get-path (cb-tree-path (iter (object tree-iter)))
+                    (path ptree-path))
+ get-path (ptree-path (iter (object tree-iter)))
  get-value (:void (iter (object tree-iter)) (n :int)
                   (value :pointer))
  iter-next (:boolean (iter (object tree-iter)))
@@ -306,7 +306,7 @@
                   (g-type-register-static-simple
                    #.(keyword->g-type :object)
                    (g-intern-static-string "GtkLispModel")
-                   (foreign-type-size 'g-object-class)
+                   (foreign-type-size 'g-object-class-struct)
                    (callback cb-lisp-model-class-init)
                    (foreign-type-size 'g-object)
                    (callback cb-lisp-model-init)
