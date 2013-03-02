@@ -22,19 +22,17 @@
 
 (defcfun gtk-range-set-increments :void 
   (range pobject) (step :double) (page :double))
-(defgeneric (setf increments) (increments range)
-  (:method (increments (range range))
-    (destructuring-bind (step page) increments
-      (gtk-range-set-increments range step page))
-    increments))
+(defmethod (setf increments) (increments (range range))
+  (destructuring-bind (step page) increments
+    (gtk-range-set-increments range step page))
+  increments)
 
 (defcfun gtk-range-set-range :void 
   (range pobject) (min :double) (max :double))
-(defgeneric (setf range) (min-max range)
-  (:method (min-max (range range))
-    (destructuring-bind (min max) min-max
+(defmethod (setf range) (min-max (range range))
+  (destructuring-bind (min max) min-max
       (gtk-range-set-increments range min max))
-    min-max))
+    min-max)
 
 (defcfun gtk-range-get-slider-range :void 
   (range pobject) (start :pointer) (end :pointer))

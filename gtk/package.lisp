@@ -11,7 +11,8 @@
   (:use #:common-lisp #:alexandria #:iterate
         #:cffi-objects #:g-object-cffi #:g-lib-cffi #:gdk-cffi 
         #:gtk-cffi-utils)
-  (:shadow #:image #:window #:switch)
+  (:shadow #:image #:window #:switch) ; gdk
+  (:shadow #:maximize) ; iterate
   (:export
    ;;;; common
    #:gtk-init
@@ -610,7 +611,20 @@
    #:rules-hint
    #:headers-visible
    #:hover-selection
+   #:search-equal-func #:tooltip-column
+   #:search-entry
+   #:row-sepearator-func
+   #:fixed-height-mode
+   #:search-position-func
+   #:enable-tree-lines
+   #:grid-lines 
+   #:enable-search
    ;; tree-view methods
+   #:is-rubber-banding-active
+   #:create-row-drag-icon
+   #:unset-rows-drag-source
+   #:unset-rows-drag-dest
+   #:bin-window
    #:append-column
    #:insert-column
    #:selection
@@ -618,7 +632,12 @@
    #:column
    #:cursor
    #:remove-column
-
+   #:row-expanded #:expand-row
+   #:expand-to-path #:collapse-row
+   #:expand-all #:row-activated
+   #:scroll-to-point #:collapse-all
+   #:move-column-after
+                           
    #:tree-view-column
    ;; slots
    #:sort-column-id

@@ -9,7 +9,7 @@
 
 ;(eval-when (:compile-toplevel :load-toplevel :execute)
 (define-foreign-library :gdk
-  (:unix "libgdk-3.so.0")
+  (:unix (:or "libgdk-3.so.0" "libgdk-3.so"))
   (:windows "libgdk-win32-3xs-0.dll"))
 
 (use-foreign-library :gdk)

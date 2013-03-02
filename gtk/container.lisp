@@ -121,8 +121,9 @@ Usage: (setf (child-property object parent :property) value)
 
 (defcfun gtk-container-remove :void (container pobject) (widget pobject))
 
-(defmethod container-remove ((container container) (widget widget))
-  (gtk-container-remove container widget))
+(defgeneric container-remove (container widget)
+  (:method ((container container) (widget widget))
+    (gtk-container-remove container widget)))
 
 (defcfun gtk-container-propagate-draw 
     :void (container pobject) (child pobject) (context :pointer))

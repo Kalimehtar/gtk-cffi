@@ -58,10 +58,9 @@
     (with-foreign-outs-list ((step :double) (page :double)) :ignore
       (gtk-spin-button-get-increments spin-button step page))))
 
-(defgeneric (setf increments) (value spin-button)
-  (:method (value (spin-button spin-button))
-    (destructuring-bind (step page) value
-      (gtk-spin-button-set-increments spin-button step page))))
+(defmethod (setf increments) (value (spin-button spin-button))
+  (destructuring-bind (step page) value
+    (gtk-spin-button-set-increments spin-button step page)))
 (save-setter spin-button increments)
 
 (defcfun gtk-spin-button-set-range :void (spin-button pobject)
@@ -74,10 +73,9 @@
     (with-foreign-outs-list ((min :double) (max :double)) :ignore
       (gtk-spin-button-get-range spin-button min max))))
 
-(defgeneric (setf range) (value spin-button)
-  (:method (value (spin-button spin-button))
-    (destructuring-bind (min max) value
-      (gtk-spin-button-set-range spin-button min max))))
+(defmethod (setf range) (value (spin-button spin-button))
+  (destructuring-bind (min max) value
+    (gtk-spin-button-set-range spin-button min max)))
 (save-setter spin-button range)
 
 

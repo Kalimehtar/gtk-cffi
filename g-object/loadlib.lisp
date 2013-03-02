@@ -9,7 +9,7 @@
 (in-package #:g-object-cffi)
 
 (define-foreign-library :g-object
-  (:unix "libgobject-2.0.so")
+  (:unix (:or "libgobject-2.0.so.0" "libgobject-2.0.so"))
   (:windows "libgobject-2.0-0.dll"))
 
 (use-foreign-library :g-object)

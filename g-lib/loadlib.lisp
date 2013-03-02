@@ -10,7 +10,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (define-foreign-library :g-lib
-    (:unix "libglib-2.0.so")
+    (:unix (:or "libglib-2.0.so.0" "libglib-2.0.so"))
     (:windows "libglib-2.0-0.dll"))
 
   (load-foreign-library :g-lib))

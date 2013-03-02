@@ -21,7 +21,7 @@
   (unless (find :gtk *features*)
     (push :gtk *features*)
     (define-foreign-library :gtk
-      (:unix "libgtk-3.so.0") ;libgtk-x11-2.0.so")
+      (:unix (:or "libgtk-3.so.0" "libgtk-3.so"))
       (:windows "libgtk-win32-3-0.dll"))
     
     (use-foreign-library :gtk)))

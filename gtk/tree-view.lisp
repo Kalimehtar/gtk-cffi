@@ -19,9 +19,12 @@
 
 (defmethod gconstructor ((tree-view tree-view)
                          &key model &allow-other-keys)
+  (initialize tree-view 'model)
   (if model
       (gtk-tree-view-new-with-model model)
     (gtk-tree-view-new)))
+
+(defcenum tree-view-grid-lines :nobe :horizontal :vertical :both)
 
 (defslots tree-view
   level-indentation :int
@@ -37,8 +40,17 @@
   rubber-banding :boolean
   search-column :int
   expander-column pobject
-  reorderable :boolean)
+  reorderable :boolean
+  enable-search :boolean
+  search-entry pobject
+  fixed-height-mode :boolean
+  enable-tree-lines :boolean
+  grid-lines tree-view-grid-lines
+  tooltip-column :int)
   
+  
+(defcenum tree-view-drop-position
+  :before :after :into-or-before :into-or-after)
 
 (deffuns tree-view 
   (remove-column :int (column pobject))
@@ -57,13 +69,18 @@
   (expand-row :void (path tree-path) (open-all :boolean))
   (collapse-row :void (path tree-path))
   (row-expanded :boolean (path tree-path))
-  (:get bin-window pobject))
-  
-  
+  (:get bin-window pobject)
+  (unset-rows-drag-source :void)
+  (unset-rows-drag-dest :void)
+  (create-row-drag-icon :pointer (path tree-path))
+  (:get search-equal-func :pointer)
+  (:get search-position-func :pointer)
+  (:get row-separator-func :pointer)
+  (is-rubber-banding-active :boolean))
   
 
 (defcfun gtk-tree-view-scroll-to-cell :void 
-  (tree-view pobject) (path ptree-path) (column pobject) (use-align :boolean) 
+  (tree-view pobject) (path tree-path) (column pobject) (use-align :boolean) 
   (row-align :float) (col-align :float))
 
 (defgeneric scroll-to-cell (tree-view path column &key row-align col-align)
@@ -229,6 +246,118 @@ gtk-tree-view-path-at-pos")
 (defcfun gtk-tree-view-enable-model-drag-dest :void
   (tree-view pobject) (targets (carray (struct target-entry)))
   (n-targets :int) (action drag-action))
+
+(defgeneric enable-model-drag-dest (tree-view target action)
+  (:method ((tree-view tree-view) targets action)
+    (gtk-tree-view-enable-model-drag-dest tree-view targets
+                                          (length targets) action)))
+
+(defcfun gtk-tree-view-enable-model-drag-source :void
+  (tree-view pobject) (start-button-mask modifier-type) 
+  (targets (carray (struct target-entry)))
+  (n-targets :int) (action drag-action))
+
+(defgeneric enable-model-drag-source (tree-view start-button-mask 
+                                                targets action)
+  (:method ((tree-view tree-view) start-button-mask targets action)
+    (gtk-tree-view-enable-model-drag-source tree-view start-button-mask targets
+                                            (length targets) action)))
+
+(defcfun gtk-tree-view-get-drag-dest-row :void (tree-view pobject)
+         (tree-path :pointer) (pos :pointer))
+
+(defgeneric drag-dest-row (tree-view)
+  (:method ((tree-view tree-view))
+    (with-foreign-outs-list ((path 'tree-path) (pos 'tree-view-drop-position)) 
+        :ignore
+      (gtk-tree-view-get-drag-dest-row tree-view path pos))))
+
+(defcfun gtk-tree-view-set-drag-dest-row :void (tree-view pobject)
+         (tree-path tree-path) (pos tree-view-drop-position))
+
+(defgeneric (setf drag-dest-row) (value tree-view)
+  (:method (value (tree-view tree-view))
+    (destructuring-bind (path pos) value
+      (gtk-tree-view-set-drag-dest-row tree-view path pos))))
+
+(defcfun gtk-tree-view-get-dest-row-at-pos :void (tree-view pobject)
+         (x :int) (y :int)
+         (tree-path :pointer) (pos :pointer))
+
+(defgeneric dest-row-at-post (tree-view x y)
+  (:method ((tree-view tree-view) x y)
+    (with-foreign-outs-list ((path 'tree-path) (pos 'tree-view-drop-position)) 
+        :ignore
+      (gtk-tree-view-get-dest-row-at-pos tree-view x y path pos))))
+
+(defcfun gtk-tree-view-set-search-equal-func :int
+  (tree-view pobject) 
+  (func pfunction) (data pdata) (destroy pfunction))
+
+(defcallback cb-search-equal-func :boolean
+    ((tree-view pobject) (column :int) (key :string) 
+     (tree-iter (struct tree-iter)) (data pdata))
+  (funcall data tree-view column key tree-iter))
+
+(defgeneric (setf search-equal-func) (func tree-view &key data destroy-notify)
+  (:method (func (tree-view tree-view) &key data destroy-notify)
+    (set-callback tree-view gtk-tree-view-set-search-equal-func
+                  cb-search-equal-func func data destroy-notify)))
+
+(defcfun gtk-tree-view-set-search-position-func :int
+  (tree-view pobject) 
+  (func pfunction) (data pdata) (destroy pfunction))
+
+(defcallback cb-search-position-func :boolean
+    ((tree-view pobject) (search-dialog pobject) (data pdata))
+  (funcall data tree-view search-dialog))
+
+(defgeneric (setf search-position-func) (func tree-view &key data destroy-notify)
+  (:method (func (tree-view tree-view) &key data destroy-notify)
+    (set-callback tree-view gtk-tree-view-set-search-position-func
+                  cb-search-position-func func data destroy-notify)))
+
+(defcfun gtk-tree-view-set-row-separator-func :int
+  (tree-view pobject) 
+  (func pfunction) (data pdata) (destroy pfunction))
+
+(defcallback cb-row-separator-func :boolean
+    ((tree-view pobject) (tree-iter (struct tree-iter)) (data pdata))
+  (funcall data tree-view tree-iter))
+
+(defgeneric (setf row-separator-func) (func tree-view &key data destroy-notify)
+  (:method (func (tree-view tree-view) &key data destroy-notify)
+    (set-callback tree-view gtk-tree-view-set-row-separator-func
+                  cb-row-separator-func func data destroy-notify)))
+
+(defcfun gtk-tree-view-set-tooltip-row :void 
+  (tree-view pobject) (tooltip pobject) (tree-path tree-path))
+
+(defgeneric (setf tooltip-row) (value tree-view tooltip)
+  (:method (value (tree-view tree-view) tooltip)
+    (gtk-tree-view-set-tooltip-row tree-view tooltip value)))
+
+(defcfun gtk-tree-view-set-tooltip-cell :void 
+  (tree-view pobject) (tooltip pobject) (tree-path tree-path) (column pobject)
+  (cell pobject))
+
+(defgeneric (setf tooltip-cell) (value tree-view tooltip)
+  (:method (value (tree-view tree-view) tooltip)
+    (destructuring-bind (path column cell) value
+      (gtk-tree-view-set-tooltip-cell tree-view tooltip path column cell))))
+
+(defcfun gtk-tree-view-get-tooltip-context :boolean
+  (tree-view pobject) (ptr-x :pointer) (ptr-y :pointer) (keyboard-tip :boolean)
+  (model :pointer) (path :pointer) (tree-iter (struct tree-iter :out t)))
+
+(defgeneric tooltip-context (tree-view ptr-x ptr-y keyboard-tip)
+  (:method ((tree-view tree-view) ptr-x ptr-y keyboard-tip)
+    (let ((tree-iter (make-instance 'tree-iter)))
+      (multiple-value-bind (res model path)
+          (with-foreign-outs ((model 'pobject) (path 'pobject)) :return
+              (gtk-tree-view-get-tooltip-context 
+               tree-view ptr-x ptr-y keyboard-tip model path tree-iter))
+        (when res (list model path tree-iter))))))
 
 (init-slots tree-view (on-select)
   (when on-select

@@ -69,8 +69,9 @@
 (defun init-g-value (ptr type value value-p)
   (macrolet ((gtypecase (x &rest body)
                `(typecase ,x
-                  ,@(mapcar (lambda (x) (list (car x)
-                                              (keyword->g-type (cdr x))))
+                  ,@(mapcar (lambda (x) 
+                              (list (car x)
+                                    (keyword->g-type (cdr x))))
                             body))))
     (let ((%type (or type
                      (when value-p
@@ -146,8 +147,10 @@ Returns integer GType."
                    ((#.(keyword->g-type :enum)
                        #.(keyword->g-type :flags))
                     (convert-to-foreign value (g-type->lisp type)))
-                   (#.(keyword->g-type :double) (coerce value 'double-float))
-                   (#.(keyword->g-type :float) (coerce value 'single-float))
+                   (#.(keyword->g-type :double)
+                      (coerce value 'double-float))
+                   (#.(keyword->g-type :float)
+                      (coerce value 'single-float))
                    ((#.(keyword->g-type :int)
                        #.(keyword->g-type :uint)
                        #.(keyword->g-type :long)
@@ -157,7 +160,8 @@ Returns integer GType."
                    (t value))))
 ;        (debug-out "  converted value ~a~%" val) 
         (when (/= type 0)
-          (funcall (select-accessor ftype :g-value-set-) ptr val)))))
+          (funcall (select-accessor ftype :g-value-set-) 
+                   ptr val)))))
 
   (defun g-value-get (value)
     (unless (null-pointer-p value)
@@ -201,7 +205,8 @@ Returns integer GType."
   "This macro allows recursive *g-value* binding"
   `(progn
      (let* ((changed? (/= 0 (g-type *g-value*)))
-            (*g-value* (if changed? (make-instance 'g-value) *g-value*)))
+            (*g-value* (if changed? (make-instance 'g-value) 
+                           *g-value*)))
        (init *g-value* ,@val)
        (unwind-protect
             (progn
