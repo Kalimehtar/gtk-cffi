@@ -31,7 +31,13 @@
    #:is-return-value
    #:is-caller-allocates
    #:direction
-   #:property))
+   #:property
+
+   #:caller-owns #:arg #:param-type #:get-array-length
+   #:vfunc #:return-attribute #:interface
+   #:is-zero-terminated #:array-fixed-size
+   #:array-type #:tag #:may-return-null
+   #:n-args #:is-pointer #:return-type))
 
 (in-package #:gi-cffi)
 (g-object-cffi:register-prefix *package* 'g)

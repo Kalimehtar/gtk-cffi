@@ -15,6 +15,12 @@
   (:get property (object property-info))
   (:get vfunc (object vfunc-info)))
 
+(defmethod print-object ((function-info function-info) stream)
+  (print-unreadable-object (function-info stream)
+    (format stream "~a(~{~a~^,~})" (name function-info) 
+            (mapcar #'name (args function-info)))))
+      
+
 (defcfun g-function-info-invoke :boolean 
   (func-info pobject) 
   (in-args arguments) (n-in-args :int)
@@ -23,7 +29,7 @@
 
 (defgeneric invoke (func-info &rest args)
   (:method ((func-info function-info) &rest args)
-    (let (in-args out-args return-value)
+    (let (in-args out-args (return-value (make-arg (return-type func-info))))
       (dotimes (n-arg (n-args func-info))
         (let ((arg (arg func-info n-arg)))
           (when (member (direction arg) '(:in :inout))

@@ -73,7 +73,15 @@
 
 (defun arg-type (place) (car place))
 (defun arg-value (place) (cdr place))
-(defun (setf arg-avlue) (value place) (setf (cdr place) value))
+(defun (setf arg-value) (value place) (setf (cdr place) value))
+(defun make-arg (type &optional value) 
+  (cons type (or value
+                 (case (tag type)
+                   ((:utf8 :filename) "")
+                   (:boolean nil)
+                   (t 0)))))
+            
+              
 
 (define-foreign-type cffi-giargument (freeable-out)
   ()
@@ -84,7 +92,7 @@
 (defmethod translate-to-foreign (place (arg cffi-giargument))
   (let ((ptr (foreign-alloc 'giargument)))
     (to-foreign (tag (arg-type place)) place ptr)
-    ptr))
+    (values ptr place)))
 
 (defmethod translate-from-foreign (ptr (arg cffi-giargument))
   (error "GIArgument cannot be returned"))
@@ -98,8 +106,9 @@
 
 (defun gen-to-foreign 
     (tag place ptr &key (conv #'identity)
-                        (field (intern (symbol-name tag))))
-  (if (is-pointer (arg-type place))
+                        (field (intern (symbol-name tag) #.*package*)))
+  (if (and (is-pointer (arg-type place))
+           (not (member tag '(:utf8 :interface :filename))))
       (let ((ptr2 (foreign-alloc (giargument-type field) 
                                  :initial-contents 
                                  (funcall conv (arg-value place)))))
@@ -109,14 +118,16 @@
 
 (defun gen-from-foreign
     (tag place ptr &key (conv #'identity)
-                        (field (intern (symbol-name tag))))
-  (if (is-pointer (arg-type place))
-      (let ((ptr2 (foreign-alloc (giargument-type field) 
-                                 :initial-contents 
-                                 (funcall conv (arg-value place)))))
-        (setf (foreign-slot-value ptr 'giargument 'pointer) ptr2))
-      (setf (foreign-slot-value ptr 'giargument field)
-            (funcall conv (arg-value place)))))
+                        (field (intern (symbol-name tag) #.*package*)))
+  (if (and (is-pointer (arg-type place))
+           (not (member tag '(:utf8 :interface :filename))))
+      (let ((ptr2 (foreign-slot-value ptr 'giargument 'pointer)))
+        (setf (arg-value place) 
+              (funcall conv (mem-ref ptr2 (giargument-type field))))
+        (foreign-free ptr2))
+      (setf (arg-value place)
+            (funcall conv (foreign-slot-value ptr 'giargument field)))))
+
                        
 
 (defun to-foreign (tag place ptr)

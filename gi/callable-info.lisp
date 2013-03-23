@@ -13,3 +13,7 @@
 
 (defmethod free-ptr ((type (eql 'callable-info)) ptr)
   (g-base-info-unref ptr))
+
+(defun args (callable)
+  (loop :for n :from 0 :below (n-args callable)
+     :collect (arg callable n)))

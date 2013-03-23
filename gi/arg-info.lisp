@@ -31,4 +31,4 @@
             (ownership-transfer arg-info) (get-type arg-info))))
 
 (defun arg->argument (arg &optional value)
-  (cons (get-type arg) value))
+  (make-arg (get-type arg) value))

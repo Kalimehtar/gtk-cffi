@@ -25,6 +25,6 @@
   (g-base-info-unref ptr))
 
 (defmethod print-object ((base-info base-info) stream)
-  (print-unreadable-object (base-info stream)
+  (print-unreadable-object (base-info stream :type t)
     (princ (name base-info) stream)))
  
