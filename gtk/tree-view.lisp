@@ -110,8 +110,8 @@
 (save-setter tree-view columns)
        
 
-(defcfun gtk-tree-view-get-cursor :void (view pobject)
-  (path :pointer) (column :pointer))
+(defcfun gtk-tree-view-get-cursor :void 
+  (view pobject) (path :pointer) (column :pointer))
 
 (defgeneric cursor (tree-view)
   (:method ((tree-view tree-view))
@@ -247,7 +247,7 @@ gtk-tree-view-path-at-pos")
   (tree-view pobject) (targets (carray (struct target-entry)))
   (n-targets :int) (action drag-action))
 
-(defgeneric enable-model-drag-dest (tree-view target action)
+(defgeneric enable-model-drag-dest (tree-view targets action)
   (:method ((tree-view tree-view) targets action)
     (gtk-tree-view-enable-model-drag-dest tree-view targets
                                           (length targets) action)))
