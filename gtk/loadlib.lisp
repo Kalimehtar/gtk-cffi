@@ -12,7 +12,7 @@
     (push :gtk *features*)
     (define-foreign-library :gtk
       (:unix (:or "libgtk-3.so.0" "libgtk-3.so"))
-      (:windows "libgtk-win32-3-0.dll"))
+      (:windows (:or "libgtk-3-0.dll" "libgtk-win32-3-0.dll")))
     
     (use-foreign-library :gtk)))
 
