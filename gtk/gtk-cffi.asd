@@ -538,6 +538,14 @@
   :components
   ((:file spin-button)))
 
+(defsystem gtk-cffi-gl-area
+  :description "Interface to GTK/Glib via CFFI"
+  :author "Roman Klochkov <kalimehtar@mail.ru>"
+  :version "0.99"
+  :license "LLGPL"
+  :depends-on (gtk-cffi-widget)
+  :components
+  ((:file gl-area)))
 
 (defsystem gtk-cffi
   :description "Interface to GTK/Glib via CFFI"
