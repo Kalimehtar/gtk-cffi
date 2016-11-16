@@ -1147,7 +1147,22 @@
    #:value-as-int
    #:update
    #:spin
-   ))
+
+   #:gl-area
+   ;; slots
+   #:has-alpha
+   #:has-depth-buffer
+   #:has-stencil-buffer
+   #:auto-render
+   #:use-es
+   ;; methods
+   #:context
+   #:make-current
+   #:queue-render
+   #:attach-buffers
+   #:get-required-version
+   #:set-required-version
+   #:event-window))
 
 (in-package #:gtk-cffi)
 (register-package "Gtk" *package*)
